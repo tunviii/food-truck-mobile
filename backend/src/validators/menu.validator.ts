@@ -3,7 +3,6 @@ import { menuCategories } from "../models/MenuItem";
 
 const menuItemBodySchema = z.object({
   name: z.string().trim().min(2),
-  description: z.string().trim().optional().default(""),
   price: z.number().nonnegative(),
   category: z.enum(menuCategories),
   imageUrl: z.string().trim().url().optional().or(z.literal("")).default(""),

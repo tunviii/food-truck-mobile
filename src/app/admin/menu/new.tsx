@@ -1,19 +1,18 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
-import { Alert, ScrollView, Switch, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createMenuItem } from "@/features/menu/api";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { useState } from "react";
+import { Alert, ScrollView, Switch, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const defaultCategory = "mains";
 
 export default function NewMenuItemScreen() {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState(defaultCategory);
   const [prepTimeMinutes, setPrepTimeMinutes] = useState("10");
@@ -33,7 +32,6 @@ export default function NewMenuItemScreen() {
   function submit() {
     mutation.mutate({
       name: name.trim(),
-      description: description.trim(),
       price: Number(price),
       category: category.trim(),
       prepTimeMinutes: Number(prepTimeMinutes),
@@ -50,10 +48,19 @@ export default function NewMenuItemScreen() {
         <Text className="text-3xl font-bold text-zinc-950">New item</Text>
         <View className="mt-6 gap-4">
           <Input label="Name" value={name} onChangeText={setName} />
-          <Input label="Description" value={description} onChangeText={setDescription} />
-          <Input label="Price" value={price} onChangeText={setPrice} keyboardType="numeric" />
+          <Input
+            label="Price"
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+          />
           <Input label="Category" value={category} onChangeText={setCategory} />
-          <Input label="Prep time minutes" value={prepTimeMinutes} onChangeText={setPrepTimeMinutes} keyboardType="numeric" />
+          <Input
+            label="Prep time minutes"
+            value={prepTimeMinutes}
+            onChangeText={setPrepTimeMinutes}
+            keyboardType="numeric"
+          />
           <View className="rounded-lg border border-orange-100 bg-white p-4">
             <View className="flex-row items-center justify-between">
               <Text className="font-semibold text-zinc-950">Vegetarian</Text>
@@ -64,7 +71,11 @@ export default function NewMenuItemScreen() {
               <Switch value={isSpicy} onValueChange={setIsSpicy} />
             </View>
           </View>
-          <Button title="Create item" loading={mutation.isPending} onPress={submit} />
+          <Button
+            title="Create item"
+            loading={mutation.isPending}
+            onPress={submit}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

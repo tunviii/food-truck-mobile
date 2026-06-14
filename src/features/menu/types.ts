@@ -3,7 +3,6 @@ export type MenuCategory = string;
 export type MenuItem = {
   _id: string;
   name: string;
-  description: string;
   price: number;
   category: MenuCategory;
   imageUrl: string;
@@ -15,7 +14,6 @@ export type MenuItem = {
 
 export type MenuItemInput = {
   name: string;
-  description: string;
   price: number;
   category: string;
   imageUrl?: string;

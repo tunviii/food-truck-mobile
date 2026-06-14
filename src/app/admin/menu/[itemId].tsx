@@ -1,21 +1,27 @@
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Input } from "@/components/ui/Input";
+import {
+  deleteMenuItem,
+  getMenuItems,
+  updateMenuItem,
+} from "@/features/menu/api";
+import { getErrorMessage } from "@/lib/utils/errors";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { Input } from "@/components/ui/Input";
-import { deleteMenuItem, getMenuItems, updateMenuItem } from "@/features/menu/api";
-import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function EditMenuItemScreen() {
   const { itemId } = useLocalSearchParams<{ itemId: string }>();
   const queryClient = useQueryClient();
-  const menuQuery = useQuery({ queryKey: ["admin-menu"], queryFn: () => getMenuItems(true) });
+  const menuQuery = useQuery({
+    queryKey: ["admin-menu"],
+    queryFn: () => getMenuItems(true),
+  });
   const item = menuQuery.data?.find((candidate) => candidate._id === itemId);
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [prepTimeMinutes, setPrepTimeMinutes] = useState("");
@@ -26,7 +32,6 @@ export default function EditMenuItemScreen() {
   useEffect(() => {
     if (!item) return;
     setName(item.name);
-    setDescription(item.description);
     setPrice(String(item.price));
     setCategory(item.category);
     setPrepTimeMinutes(String(item.prepTimeMinutes));
@@ -39,7 +44,6 @@ export default function EditMenuItemScreen() {
     mutationFn: () =>
       updateMenuItem(String(itemId), {
         name: name.trim(),
-        description: description.trim(),
         price: Number(price),
         category: category.trim(),
         prepTimeMinutes: Number(prepTimeMinutes),
@@ -77,7 +81,10 @@ export default function EditMenuItemScreen() {
   if (!item) {
     return (
       <SafeAreaView className="flex-1 bg-orange-50 px-5 py-6">
-        <EmptyState title="Item not found" message="Go back and choose another menu item." />
+        <EmptyState
+          title="Item not found"
+          message="Go back and choose another menu item."
+        />
       </SafeAreaView>
     );
   }
@@ -88,10 +95,19 @@ export default function EditMenuItemScreen() {
         <Text className="text-3xl font-bold text-zinc-950">Edit item</Text>
         <View className="mt-6 gap-4">
           <Input label="Name" value={name} onChangeText={setName} />
-          <Input label="Description" value={description} onChangeText={setDescription} />
-          <Input label="Price" value={price} onChangeText={setPrice} keyboardType="numeric" />
+          <Input
+            label="Price"
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+          />
           <Input label="Category" value={category} onChangeText={setCategory} />
-          <Input label="Prep time minutes" value={prepTimeMinutes} onChangeText={setPrepTimeMinutes} keyboardType="numeric" />
+          <Input
+            label="Prep time minutes"
+            value={prepTimeMinutes}
+            onChangeText={setPrepTimeMinutes}
+            keyboardType="numeric"
+          />
           <View className="rounded-lg border border-orange-100 bg-white p-4">
             <View className="flex-row items-center justify-between">
               <Text className="font-semibold text-zinc-950">Vegetarian</Text>
@@ -106,8 +122,17 @@ export default function EditMenuItemScreen() {
               <Switch value={isAvailable} onValueChange={setIsAvailable} />
             </View>
           </View>
-          <Button title="Save changes" loading={updateMutation.isPending} onPress={() => updateMutation.mutate()} />
-          <Button title="Delete item" variant="danger" loading={deleteMutation.isPending} onPress={() => deleteMutation.mutate()} />
+          <Button
+            title="Save changes"
+            loading={updateMutation.isPending}
+            onPress={() => updateMutation.mutate()}
+          />
+          <Button
+            title="Delete item"
+            variant="danger"
+            loading={deleteMutation.isPending}
+            onPress={() => deleteMutation.mutate()}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
