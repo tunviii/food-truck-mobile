@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "food-truck-mobile",
-    "slug": "food-truck-mobile",
+    "name": "Wok and Roll",
+    "slug": "wok-and-roll",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "foodtruckmobile",
+    "scheme": "wok-and-roll",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -34,7 +34,8 @@
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,

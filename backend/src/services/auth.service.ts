@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { env } from "../config/env";
+import { HttpError } from "../middleware/error-handler";
 import { User, type UserRole } from "../models/User";
 
 type RegisterInput = {
@@ -40,12 +41,12 @@ export async function registerUser(input: RegisterInput) {
 export async function loginUser(email: string, password: string) {
   const user = await User.findOne({ email });
   if (!user) {
-    throw new Error("Invalid email or password");
+    throw new HttpError("Invalid email or password", 401);
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
   if (!isValid) {
-    throw new Error("Invalid email or password");
+    throw new HttpError("Invalid email or password", 401);
   }
 
   return {

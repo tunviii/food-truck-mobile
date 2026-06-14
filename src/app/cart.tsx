@@ -1,180 +1,109 @@
-import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMutation } from "@tanstack/react-query";
+import { router, type Href } from "expo-router";
+import { MapPin, ShoppingCart, UtensilsCrossed } from "lucide-react-native";
+import { useState } from "react";
+import { Alert, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { CartItemRow } from "@/components/cart/CartItemRow";
+import { BottomTabBar, TAB_BAR_HEIGHT, type TabItem } from "@/components/ui/BottomTabBar";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Input } from "@/components/ui/Input";
+import { useCartStore } from "@/features/cart/store";
+import { createOrder } from "@/features/orders/api";
+import { formatCurrency } from "@/lib/utils/currency";
+import { getErrorMessage } from "@/lib/utils/errors";
 
-import { ExternalLink } from '@/components/external-link';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+export default function CartScreen() {
+  const items = useCartStore((state) => state.items);
+  const increment = useCartStore((state) => state.increment);
+  const decrement = useCartStore((state) => state.decrement);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const setLastOrderToken = useCartStore((state) => state.setLastOrderToken);
+  const totalAmount = useCartStore((state) => state.totalAmount());
+  const totalItems = useCartStore((state) => state.totalItems());
+  const lastOrderToken = useCartStore((state) => state.lastOrderToken);
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
 
-export default function TabTwoScreen() {
-  const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
-  const theme = useTheme();
+  const customerTabs: TabItem[] = [
+    { label: "Menu", icon: UtensilsCrossed, href: "/menu" },
+    { label: "Cart", icon: ShoppingCart, href: "/cart", badge: totalItems },
+    { label: "My Order", icon: MapPin, href: "/track" },
+  ];
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
+  const orderMutation = useMutation({
+    mutationFn: createOrder,
+    onSuccess: (order) => {
+      clearCart();
+      setLastOrderToken(order.tokenNumber);
+      router.replace({ pathname: "/order-success", params: { tokenNumber: String(order.tokenNumber) } } as Href);
     },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
+    onError: (error) => {
+      Alert.alert("Order failed", getErrorMessage(error));
     },
   });
 
+  function submitOrder() {
+    if (items.length === 0) return;
+    if (!customerName.trim() || !customerPhone.trim()) {
+      Alert.alert("Missing details", "Enter your name and phone number.");
+      return;
+    }
+
+    orderMutation.mutate({
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      items: items.map((item) => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity,
+        notes: item.notes,
+      })),
+    });
+  }
+
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Explore</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
-          </ThemedText>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff7ed" }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: TAB_BAR_HEIGHT + 20 }}>
+        <Text style={{ fontSize: 30, fontWeight: "800", color: "#09090b" }}>Cart</Text>
+        <Text style={{ marginTop: 6, fontSize: 15, color: "#52525b" }}>Review items and place your pickup order.</Text>
 
-          <ExternalLink href="https://docs.expo.dev" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.linkButton}>
-                <ThemedText type="link">Expo documentation</ThemedText>
-                <SymbolView
-                  tintColor={theme.text}
-                  name={{ ios: 'arrow.up.right.square', android: 'link', web: 'link' }}
-                  size={12}
-                />
-              </ThemedView>
-            </Pressable>
-          </ExternalLink>
-        </ThemedView>
-
-        <ThemedView style={styles.sectionsWrapper}>
-          <Collapsible title="File-based routing">
-            <ThemedText type="small">
-              This app has two screens: <ThemedText type="code">src/app/index.tsx</ThemedText> and{' '}
-              <ThemedText type="code">src/app/explore.tsx</ThemedText>
-            </ThemedText>
-            <ThemedText type="small">
-              The layout file in <ThemedText type="code">src/app/_layout.tsx</ThemedText> sets up
-              the tab navigator.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/router/introduction">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Android, iOS, and web support">
-            <ThemedView type="backgroundElement" style={styles.collapsibleContent}>
-              <ThemedText type="small">
-                You can open this project on Android, iOS, and the web. To open the web version,
-                press <ThemedText type="smallBold">w</ThemedText> in the terminal running this
-                project.
-              </ThemedText>
-              <Image
-                source={require('@/assets/images/tutorial-web.png')}
-                style={styles.imageTutorial}
+        <View style={{ marginTop: 20, gap: 12 }}>
+          {items.length === 0 ? (
+            <EmptyState title="Your cart is empty" message="Add something tasty from the menu." />
+          ) : (
+            items.map((item) => (
+              <CartItemRow
+                key={item.menuItemId}
+                item={item}
+                onIncrease={() => increment(item.menuItemId)}
+                onDecrease={() => decrement(item.menuItemId)}
+                onRemove={() => removeItem(item.menuItemId)}
               />
-            </ThemedView>
-          </Collapsible>
+            ))
+          )}
+        </View>
 
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Light and dark mode components">
-            <ThemedText type="small">
-              This template has light and dark mode support. The{' '}
-              <ThemedText type="code">useColorScheme()</ThemedText> hook lets you inspect what the
-              user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Animations">
-            <ThemedText type="small">
-              This template includes an example of an animated component. The{' '}
-              <ThemedText type="code">src/components/ui/collapsible.tsx</ThemedText> component uses
-              the powerful <ThemedText type="code">react-native-reanimated</ThemedText> library to
-              animate opening this hint.
-            </ThemedText>
-          </Collapsible>
-        </ThemedView>
-        {Platform.OS === 'web' && <WebBadge />}
-      </ThemedView>
-    </ScrollView>
+        {items.length > 0 ? (
+          <View style={{ marginTop: 20, gap: 14, borderRadius: 14, borderWidth: 1, borderColor: "#fed7aa", backgroundColor: "#fff", padding: 16 }}>
+            <Input label="Name" value={customerName} onChangeText={setCustomerName} placeholder="Pickup name" />
+            <Input
+              label="Phone"
+              value={customerPhone}
+              onChangeText={setCustomerPhone}
+              placeholder="Phone number"
+              keyboardType="phone-pad"
+            />
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: "#f4f4f5", paddingTop: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: "#3f3f46" }}>Total</Text>
+              <Text style={{ fontSize: 20, fontWeight: "800", color: "#09090b" }}>{formatCurrency(totalAmount)}</Text>
+            </View>
+            <Button title="Place order" loading={orderMutation.isPending} onPress={submitOrder} />
+          </View>
+        ) : null}
+      </ScrollView>
+      <BottomTabBar tabs={customerTabs} />
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  container: {
-    maxWidth: MaxContentWidth,
-    flexGrow: 1,
-  },
-  titleContainer: {
-    gap: Spacing.three,
-    alignItems: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
-  },
-  centerText: {
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    justifyContent: 'center',
-    gap: Spacing.one,
-    alignItems: 'center',
-  },
-  sectionsWrapper: {
-    gap: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-  },
-  collapsibleContent: {
-    alignItems: 'center',
-  },
-  imageTutorial: {
-    width: '100%',
-    aspectRatio: 296 / 171,
-    borderRadius: Spacing.three,
-    marginTop: Spacing.two,
-  },
-  imageReact: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
-  },
-});
