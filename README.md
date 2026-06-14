@@ -82,13 +82,14 @@ npm run api:dev
 ### Start the mobile app
 
 ```bash
-npm start
+npx expo start
 ```
 
 Then open the QR code in Expo Go or run on web, Android, or iOS.
 
 ## 🧪 Helpful project commands
 
+- Clear metro bundler cache and start frontend: `npx expo start --clear`
 - Start frontend: `npm start`
 - Start backend (dev): `npm run api:dev`
 - Start backend production: `npm run api:start`
